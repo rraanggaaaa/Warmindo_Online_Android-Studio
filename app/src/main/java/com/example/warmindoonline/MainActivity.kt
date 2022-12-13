@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.os.CancellationSignal
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
@@ -66,10 +67,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         checkBiometricSupport()
-        val button = findViewById<Button>(R.id.btn_authenticate)
+        val button = findViewById<ImageButton>(R.id.btn_authenticate)
         button.setOnClickListener {
             val biometricPrompt: BiometricPrompt = BiometricPrompt.Builder(this)
-                .setTitle("Title")
+                .setTitle("Fingerprint")
                 .setSubtitle("Authenticaion is required")
                 .setDescription("Fingerprint Authentication")
                 .setNegativeButton(
