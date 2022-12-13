@@ -9,11 +9,15 @@ android {
     defaultConfig {
         applicationId "com.example.warmindoonline"
         minSdk 27
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // ---> Add the next line
+        manifestPlaceholders = [auth0Domain: "@string/com_auth0_domain", auth0Scheme: "demo"]
+        // <---
     }
 
     buildTypes {
@@ -29,10 +33,14 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    buildFeatures {
+        viewBinding true
+    }
 }
 
 dependencies {
     def biometricLibraryVersion = "1.0.1"
+    implementation 'com.auth0.android:auth0:2.+'
     implementation "androidx.biometric:biometric:$biometricLibraryVersion"
     implementation 'androidx.core:core-ktx:1.9.0'
     implementation 'androidx.appcompat:appcompat:1.5.1'

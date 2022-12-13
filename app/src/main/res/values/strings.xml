@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">WarminoOnline</string>
+    <string name="com_auth0_domain">warmindoonline</string>
 </resources>
