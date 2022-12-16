@@ -1,120 +1,135 @@
 package com.example.warmindoonline
-import android.app.KeyguardManager
-import android.content.Context
-import android.content.DialogInterface
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.hardware.biometrics.BiometricPrompt
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.os.CancellationSignal
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
-import com.example.warmindoonline.Dashboard
 
+import android.content.Intent
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.widget.ImageButton
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
+import com.auth0.android.Auth0
+import com.auth0.android.authentication.AuthenticationAPIClient
+import com.auth0.android.authentication.AuthenticationException
+import com.auth0.android.callback.Callback
+import com.auth0.android.provider.WebAuthProvider
+import com.auth0.android.result.Credentials
+import com.auth0.android.result.UserProfile
+import com.example.warmindoonline.databinding.ActivityDashboardBinding
+import com.example.warmindoonline.databinding.ActivityMain2Binding
+import com.example.warmindoonline.databinding.ActivityMainBinding
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
-    private var cancellationSignal: CancellationSignal? = null
-    private val authenticationCallback: BiometricPrompt.AuthenticationCallback
-        get() =
-            @RequiresApi(Build.VERSION_CODES.P)
-            object : BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationError(errorCode: Int, errString: CharSequence?) {
-                    super.onAuthenticationError(errorCode, errString)
-                    notifyUser("Authentication error: $errString")
-                }
 
-                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult?) {
-                    super.onAuthenticationSucceeded(result)
-                    notifyUser("Authentication Success!")
-                    startActivity(Intent(this@MainActivity, Dashboard::class.java))
-                }
-            }
+    private lateinit var account: Auth0
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var binding2: ActivityDashboardBinding
+    private lateinit var binding3: ActivityMain2Binding
+    private var cachedCredentials: Credentials? = null
+    private var cachedUserProfile: UserProfile? = null
+    lateinit var buttonFinger : ImageButton
 
-    @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val btn_login: Button = findViewById(R.id.btn_login)
-        val username: EditText = findViewById(R.id.etUsername)
-        val password: EditText = findViewById(R.id.etPassword)
-        val btn_signup: Button = findViewById(R.id.btn_signup)
 
-        btn_login.setOnClickListener{
-            if (username.text.isBlank() == true && password.text.isBlank() == true)
-                Toast.makeText(this, "Masukkan Username dan Password!", Toast.LENGTH_SHORT).show()
-            else if (username.text.isBlank() == true)
-                Toast.makeText(this, "Masukkan Username!", Toast.LENGTH_SHORT).show()
-            else if (password.text.isBlank() == true)
-                Toast.makeText(this, "Masukkan Password!", Toast.LENGTH_SHORT).show()
-            else if (username.text.toString() == "rangga" && password.text.toString() == "123"){
-                val intent = Intent(this, Dashboard::class.java)
-                startActivity(intent)}
-            else {
-                Toast.makeText(this, "Username dan Password Salah!", Toast.LENGTH_SHORT).show()
-            }
-        }
+        // Set Up akun menggunakan Auth0
+        account = Auth0(
+            getString(R.string.com_auth0_client_id),
+            getString(R.string.com_auth0_domain)
+        )
 
-        btn_signup.setOnClickListener{
-            val intent = Intent(this, SignUp::class.java)
+        // Bind the button click with the login action
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.buttonLogin.setOnClickListener { loginWithBrowser() }
+        binding.buttonFinger.setOnClickListener{fingerprint()}
+
+        binding2 = ActivityDashboardBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding3 = ActivityMain2Binding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding3.btnAuthenticate
+    }
+
+//    Inisisasi Fungsi Fingerprint
+    private fun fingerprint(){
+        buttonFinger = findViewById(R.id.buttonFinger)
+        buttonFinger.setOnClickListener {
+            val intent = Intent(this, MainActivity2::class.java)
             startActivity(intent)
         }
 
-        checkBiometricSupport()
-        val button = findViewById<ImageButton>(R.id.btn_authenticate)
-        button.setOnClickListener {
-            val biometricPrompt: BiometricPrompt = BiometricPrompt.Builder(this)
-                .setTitle("Fingerprint")
-                .setSubtitle("Authenticaion is required")
-                .setDescription("Fingerprint Authentication")
-                .setNegativeButton(
-                    "Cancel",
-                    this.mainExecutor,
-                    DialogInterface.OnClickListener { dialog, which ->
-                    }).build()
-            biometricPrompt.authenticate(
-                getCancellationSignal(),
-                mainExecutor,
-                authenticationCallback
-            )
-        }
     }
 
-    private fun notifyUser(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+//    Inisiasi Login menggunakan Browser dengan Authen menggunakan Auth0
+    private fun loginWithBrowser() {
+
+        val intent = Intent(this, Dashboard::class.java)
+        // Setup WebAuthProvider, menggunakan custom skema dan scope.
+        WebAuthProvider.login(account)
+            .withScheme(getString(R.string.com_auth0_scheme))
+            .withScope("openid profile email read:current_user update:current_user_metadata")
+            .withAudience("https://${getString(R.string.com_auth0_domain)}/api/v2/")
+
+            // Meluncurkan Authentikasi menggunakan perintah callback, nantinya hasil akan diterima.
+            .start(this, object : Callback<Credentials, AuthenticationException> {
+                override fun onFailure(error: AuthenticationException) {
+                    showSnackBar("Failure: ${error.getCode()}")
+                }
+
+                override fun onSuccess(result: Credentials) {
+                    cachedCredentials = result
+                    showSnackBar("Success: ${result.accessToken}")
+                    startActivity(intent)
+                    showUserProfile()
+                    logout()
+                }
+            })
     }
 
-    private fun getCancellationSignal(): CancellationSignal {
-        cancellationSignal = CancellationSignal()
-        cancellationSignal?.setOnCancelListener {
-            notifyUser("Authentication was cancelled by the user")
-        }
-        return cancellationSignal as CancellationSignal
+//    Membuat Fungsi Logout
+    private fun logout() {
+        WebAuthProvider.logout(account)
+            .withScheme(getString(R.string.com_auth0_scheme))
+            .start(this, object : Callback<Void?, AuthenticationException> {
+                override fun onSuccess(payload: Void?) {
+                    // The user has been logged out!
+                    cachedCredentials = null
+                    cachedUserProfile = null
+//                    updateUI()
+                }
+
+                override fun onFailure(exception: AuthenticationException) {
+//                    updateUI()
+                    showSnackBar("Failure: ${exception.getCode()}")
+                }
+            })
     }
 
-    private fun checkBiometricSupport(): Boolean {
-        val keyguardManager: KeyguardManager =
-            getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-        if (!keyguardManager.isKeyguardSecure) {
-            notifyUser("Fingerprint hs not been enabled in settings.")
-            return false
-        }
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.USE_BIOMETRIC
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            notifyUser("Fingerprint hs not been enabled in settings.")
-            return false
-        }
-        return if (packageManager.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT)) {
-            true
-        } else true
+    private fun showUserProfile() {
+        val client = AuthenticationAPIClient(account)
+
+        // Menggunakan akses token untuk memanggil userInfo
+        client.userInfo(cachedCredentials!!.accessToken!!)
+            .start(object : Callback<UserProfile, AuthenticationException> {
+                override fun onFailure(exception: AuthenticationException) {
+                    showSnackBar("Failure: ${exception.getCode()}")
+                }
+
+                override fun onSuccess(profile: UserProfile) {
+                    cachedUserProfile = profile;
+                }
+            })
+    }
+
+//    Membuat sebuah Snackbar
+    private fun showSnackBar(text: String) {
+        Snackbar.make(
+            binding.root,
+            text,
+            Snackbar.LENGTH_LONG
+        ).show()
     }
 }

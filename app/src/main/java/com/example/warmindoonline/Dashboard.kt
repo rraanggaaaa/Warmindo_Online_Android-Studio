@@ -1,28 +1,38 @@
 package com.example.warmindoonline
 
+import android.annotation.SuppressLint
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.warmindoonline.R
 
 class Dashboard : AppCompatActivity() {
 
     lateinit var recyclerView: RecyclerView
     lateinit var adapter: MyAdapter
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
-        val btn_back: Button = findViewById(R.id.btn_back)
+        val btnLogout: Button = findViewById(R.id.btnLogout)
+        val btnNext: Button = findViewById(R.id.btnNext)
+
+        btnNext.setOnClickListener{
+            val intent = Intent(this, DashboardPayment::class.java)
+            startActivity((intent))
+        }
 
 
 
-        btn_back.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
+        btnLogout.setOnClickListener {
+            val intent: Intent = Intent(this, MainActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            finish()
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
             startActivity(intent)
         }
 
