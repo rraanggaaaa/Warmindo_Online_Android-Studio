@@ -1,8 +1,10 @@
-package com.example.warmindoonline
+package com.example.warmindoonline.Adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.example.warmindoonline.Data.Food
+import com.example.warmindoonline.ViewHolder.ViewHolder
 
 class MyAdapter (private val data : ArrayList<Food>) :
     RecyclerView.Adapter<ViewHolder>() {

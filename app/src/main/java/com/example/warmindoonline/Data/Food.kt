@@ -1,4 +1,4 @@
-package com.example.warmindoonline
+package com.example.warmindoonline.Data
 
 data class Food(val ImageView: Int,
                 val tv_harga : String,

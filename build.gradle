@@ -21,14 +21,6 @@ buildscript {
     }
 }
 
-//projects {
-//    repositories{
-//        google()
-//        //noinspection JcenterRepositoryObsolete
-//        jcenter()
-//    }
-//}
-
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

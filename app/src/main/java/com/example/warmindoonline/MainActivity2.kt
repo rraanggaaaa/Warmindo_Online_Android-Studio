@@ -48,7 +48,7 @@ class MainActivity2 : AppCompatActivity() {
             startActivity(intent)
         }
 
-//        Mengecek "Apakah perangkat support atau mempunyai sensor Fingerprint"
+//        Cek "Apakah perangkat support atau mempunyai sensor Fingerprint"
         checkBiometricSupport()
         val button = findViewById<ImageButton>(R.id.btn_authenticate)
         button.setOnClickListener {

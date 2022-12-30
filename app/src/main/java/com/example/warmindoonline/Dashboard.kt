@@ -7,6 +7,8 @@ import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.warmindoonline.Adapter.MyAdapter
+import com.example.warmindoonline.Data.Food
 
 class Dashboard : AppCompatActivity() {
 
@@ -26,8 +28,6 @@ class Dashboard : AppCompatActivity() {
             startActivity((intent))
         }
 
-
-
         btnLogout.setOnClickListener {
             val intent: Intent = Intent(this, MainActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             finish()
@@ -42,6 +42,7 @@ class Dashboard : AppCompatActivity() {
         recyclerView.adapter = adapter
     }
 
+//    LISTING MENU
     private fun init() {
         recyclerView = findViewById(R.id.rv_itemlist)
 
